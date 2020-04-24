@@ -17,11 +17,12 @@
 
         <div mat-line *ngIf="message.action === undefined && message.type === msgType.Question">
           <div> Question: {{message.content.question}} </div>
-          <div *ngFor="let option of message.content.optionList"> {{option}} </div>
+          <div *ngFor="let option of message.content.optionList; let optionIndex=index"> {{optionIndex + 1}}. {{option}} </div>
         </div>
 
         <div mat-line *ngIf="message.action === undefined && message.type === msgType.Answer">
-          <div> Question Answer: {{message.content.answer}} </div>
+          <div> Question: {{message.content.question}} </div>
+          <div> Answer: {{message.content.answer}} </div>
         </div>
 
         <div mat-line *ngIf="message.action === undefined && message.type === msgType.Result">

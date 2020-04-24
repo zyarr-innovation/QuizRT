@@ -8,6 +8,8 @@ import {
   Question,
   UserResultInfo
 } from "./model";
+import {QuestionList} from './question-list';
+import {IQuestion} from './question/questionCollection';
 
 enum tagMode {
   normal,
@@ -21,27 +23,7 @@ export class ChatServer {
   private io: SocketIO.Server;
   private port: string | number;
 
-  private questionList: Question[] = [
-    {
-      Id: 1,
-      question: "Greated mountain peak of the earth",
-      optionList: [
-        "1. Mount Abu.",
-        "2. Mount Everest.",
-        "3. Mount Sakerest.",
-        "4. Mount Tofu"
-      ],
-      answer: 2
-    },
-    {
-      Id: 2,
-      question: "Longest river of the earth",
-      optionList: ["1. Nile.", "2. Ganga.", "3. Yamuna.", "4. Saraswati"],
-      answer: 1
-    }
-  ];
-  private currentQuestionIndex = 0;
-
+  private questionList: QuestionList = new QuestionList();
   private userResultInfo: UserResultInfo = new UserResultInfo();
 
   private currentMode: tagMode = tagMode.normal;
@@ -102,7 +84,7 @@ export class ChatServer {
     let guess = parseInt(msg.content);
 
     if (this.currentMode == tagMode.question && !isNaN(guess)) {
-      let currentQuestion = this.questionList[this.currentQuestionIndex];
+      let currentQuestion = this.questionList.getCurrent();
 
       let userName: string = msg.from.name;
       let questionId: number = currentQuestion.Id;
@@ -120,26 +102,25 @@ export class ChatServer {
       msg.from.name = "admin";
 
       if (msg.content) {
-        if (msg.content.toLowerCase() == "q") {
-          let currentQuestion = this.questionList[this.currentQuestionIndex];
+        if (this.currentMode == tagMode.normal && 
+            msg.content.toLowerCase() == "q") {
+          let currentQuestion: IQuestion = this.questionList.getCurrent();
           msg.type = MessageType.Question;
           msg.content = currentQuestion;
 
           this.currentMode = tagMode.question;
-        } else if (msg.content.toLowerCase() == "a") {
-          let currentQuestion = this.questionList[this.currentQuestionIndex];
+        } else if (this.currentMode == tagMode.question &&
+          msg.content.toLowerCase() == "a") {
+          let currentQuestion: IQuestion = this.questionList.getCurrent();
           msg.type = MessageType.Answer;
-          msg.content = { answer: currentQuestion.answer };
+          msg.content = { 
+            question: currentQuestion.question,
+            answer: currentQuestion.optionList[currentQuestion.answer-1] 
+          };
 
-          ++this.currentQuestionIndex;
-          if (this.currentQuestionIndex == this.questionList.length) {
-            this.currentQuestionIndex = 0;
-          }
-
+          this.questionList.moveToNext ();
           this.currentMode = tagMode.normal;
         } else if (msg.content.toLowerCase() == "r") {
-          let currentQuestion = this.questionList[this.currentQuestionIndex];
-
           msg.content = this.userResultInfo.getResult();
           msg.type = MessageType.Result;
         }

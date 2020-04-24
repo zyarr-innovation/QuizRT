@@ -33,6 +33,7 @@ export class UserAnswerInfo {
 
     if (!isFound) {
       this.answerList.push(inAnswerInfo);
+      console.log (`answer: ${inAnswerInfo.answer} guess: ${inAnswerInfo.guess}`);
       if (inAnswerInfo.answer == inAnswerInfo.guess) {
         ++this.score;
       }
